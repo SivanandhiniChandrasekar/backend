@@ -4,11 +4,25 @@ const express = require('express'),
 require('express-async-errors')
 
 const db = require('./db'),
-    employeeRoutes = require('./controller')
+    employeeRoutes = require('./controller'),
+    authRoutes = require('./authentication/auth'); 
+    const verifyToken = require('./authentication/middleware');
+    const session = require('express-session');
+    require('dotenv').config();
 
-
+    app.use(session({
+        secret: process.env.JWT_REFRESH_SECRET,
+        resave: false,
+        saveUninitialized: true,
+        cookie: { secure: false, httpOnly: true }
+    }));
+    
 app.use(bodyparser.json())
-app.use('/api/employees', employeeRoutes)
+
+app.use('/api/auth', authRoutes)
+
+app.use('/api/employees', verifyToken,employeeRoutes)
+
 app.use((err, res) => {
     console.log(err)
     res.status(err.status || 500).send('Something went wrong!')
